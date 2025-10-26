@@ -189,17 +189,18 @@ curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
 #### First, generate samples an sample means:
 
 ```{r}
-nu1 <- 1  # change this!
+nu1 <- id + 10
 K <- 1e3
 n <- 5
 sample_means <- colMeans(matrix(rexp(n*K, rate = nu1), nrow=n))
+sample_means
 ```
 
 #### Next, calculate the parameters of the standard normal approximation
 
 ```{r}
-mu <- 0       # change this!
-sigma <- 1    # change this!
+mu <- 1/nu1   
+sigma <- 1/(nu1*sqrt(n))
 ```
 
 #### We can now plot ecdf and cdf
@@ -215,9 +216,41 @@ plot(Fs,
 curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
 ```
 
-**Next, proceed with all the remaining steps**
+```{r}
+max_diff <- max(abs(Fs(sample_means)-pnorm(sample_means, mean = mu, sd = sigma)))
+max_diff
+```
 
-**Do not forget to include several sentences summarizing your work and the conclusions you have made!**
+```{r}
+n_values <- c(10, 50)  
+max_differences <- numeric(length(n_values)) 
+
+par(mfrow=c(1, length(n_values)))  
+
+for (i in seq_along(n_values)) {
+  n <- n_values[i]
+  
+  sample_means <- colMeans(matrix(rexp(n*K, rate = nu1), nrow=n))
+  
+  mu <- 1/nu1
+  sigma <- 1/(nu1*sqrt(n))
+  
+  Fs <- ecdf(sample_means)
+  
+  x_vals <- sort(sample_means)
+  
+  max_differences[i] <- max(abs(Fs(x_vals) - pnorm(x_vals, mean = mu, sd = sigma)))
+  
+  xlims <- c(mu-3*sigma, mu+3*sigma)
+  plot(Fs, 
+     xlim = xlims, 
+     col = "blue",
+     lwd = 2,
+     main = "Comparison of ecdf and cdf")
+  curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
+}
+max_differences
+```
 
 ------------------------------------------------------------------------
 
