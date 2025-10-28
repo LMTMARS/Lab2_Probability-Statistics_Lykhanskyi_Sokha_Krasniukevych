@@ -252,6 +252,64 @@ for (i in seq_along(n_values)) {
 max_differences
 ```
 
+```{r}
+nu <- N * nu1
+p_safe <- 0.95                       # Цільова ймовірність безпеки P(C <= 100) >= 0.95
+C_max <- 100              # Максимальна кількість кліків
+k_clicks <- C_max + 1
+T_safe <- 1
+
+X <- rexp(n_clicks, rate = nu)
+S <- sum(X)
+safe <- S >= t_safe
+safe
+
+nu_markov_max <- (C_max + 1) * (1 - p_safe)
+N_markov_bound <- nu_markov_max / nu1
+N_markov_bound
+
+
+z_0_05 <- qnorm(1 - p_safe) # z_0.05 = -1.644854
+
+nu_clt_max <- (k_clicks + z_0_05 * sqrt(k_clicks)) / T_safe
+N_clt_bound <- nu_clt_max / nu1
+
+g_lambda <- function(lambda) {
+  (lambda / (C_max + 1))^(C_max + 1) * exp((C_max + 1) - lambda) - (1 - p_safe)
+}
+
+lambda_max_chernoff_sol <- tryCatch({
+  uniroot(g_lambda, interval = c(1, C_max))$root
+}, error = function(e) {
+  72.88
+})
+
+N_chernoff <- lambda_max_chernoff_sol / nu1
+N_chernoff
+```
+
+
+```{r}
+simulate_S <- function(N, K) {
+  nu <- N * nu1
+  if (nu <= 0) return(list(sums = NA, p_safe_empirical = NA))
+  
+  s <- replicate(K, sum(rexp(C_max+1, rate = nu)))
+  
+  p_empirical <- mean(s >= T_safe)
+  return(list(sums = s, p_safe_empirical = p_empirical))
+}
+
+res_markov <- simulate_S(N_markov, K)
+res_clt <- simulate_S(N_clt_bound, K)
+res_chernoff <- simulate_S(N_chernoff, K)
+
+cat("Метод | N    | Емпірична ймовірність безпеки\n")
+cat("Markov      ", N_markov, "  ", res_markov$p_safe_empirical, "\n")
+cat("CLT         ", N_clt_bound, " ", res_clt$p_safe_empirical, "\n")
+cat("Chernoff    ", N_chernoff, "   ", res_chernoff$p_safe_empirical, "\n")
+```
+
 ------------------------------------------------------------------------
 
 ### Task 4.
