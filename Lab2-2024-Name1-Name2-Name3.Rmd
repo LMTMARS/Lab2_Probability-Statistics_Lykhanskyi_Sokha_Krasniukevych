@@ -132,38 +132,227 @@ Assume that a medical laboratory receives $n$ samples of radioactive element ${{
     -   calculate the number of elements of the sample which are less than critical value ($8 \times 10^8$) and calculate the empirical probability; comment whether it is close to the desired level $0.95$
 
 ```{r}
-lambda <- 1  # change this!
-N <- 100     # change this!
-mu <- N * lambda
+
+# To calculate lambda - activity of the element, according to our data, we use:
+# Half life period (seconds)= Half life period (years) * 3,154*e+7
+# Cesium_137 Molar atomic mass = 137
+# Cesium_137 mass (according to initial conditions) = team_id(26) * 1e-6
+
+cat("\n ======================================== \n")
+cat("\n ===============SUBTASK 1================\n")
+cat("\n ======================================== \n")
+
+team_id <- 26
+
+ln_2 <- log(2)
+T_half_years <- 30.1
+seconds_per_year <- 3.154e+7
+N_Avogadro <- 6e+23
+
+lambda <- ln_2 / (T_half_years * seconds_per_year) # activity of the given element
+
+Ces_137_m <- team_id * 1e-6
+Ces_137_M <- 137
+
+N <- (Ces_137_m / Ces_137_M) * N_Avogadro
+mu_single <- N * lambda # Poisson parameter for one sample Xi
+
+cat("Calculated parameter of Poisson distribution of single sample Xi:", mu_single, "\n")
+
 K <- 1e3
 n <- 5
-sample_means <- colMeans(matrix(rpois(n*K, lambda = mu), nrow=n))
+
+sample_values <- rpois(n*K, lambda = mu_single)
+
+sample_means <- colMeans(matrix(sample_values, nrow=n))
 ```
 
 #### Next, calculate the parameters of the standard normal approximation
 
 ```{r}
-mu <- 0       # change this!
-sigma <- 1    # change this!
-```
 
-#### We can now plot ecdf and cdf
+# Normal distribution - N(mu, sigma2)
+# According to the CLT E(X̄) = mu and sigma2 = mu/n => sigma = sqrt(mu/n)
+
+cat("\n ======================================== \n")
+cat("\n ===============SUBTASK 2================\n")
+cat("\n ======================================== \n")
+
+
+mu <- mu_single
+sigma <- sqrt(mu/n)
+
+cat("\nParamaters of the standard normal approximation:\n")
+cat("  μ  =", mu, "\n")
+cat("  σ² =", mu/n, "\n")
+cat("  σ  =", sigma, "\n\n")
+
+Fs <- ecdf(sample_means) # ECDF for our sample 
+
+cat("\n Result visualization part")
+
+xlims <- c(mu - 3*sigma, mu + 3*sigma)
+
+plot(Fs, xlim = xlims, ylim = c(0, 1),
+     col = "red",
+     lwd = 2,
+     main = paste("ECDF and CDF results (n =", n, ")"),
+     xlab = "Sample mean",
+     ylab = "Probability(Cumulative)") 
+
+curve(pnorm(x, mean = mu, sd = sigma), 
+      col = "blue",
+      lwd = 3,
+      add = TRUE)
+
+legend("topleft",
+       legend = c("ECDF (empirical)", "CDF (theoretical)"),
+       col = c("red", "blue"),
+       lwd = 2)
+
+# Taking values from the segment with the length of 5
+
+cat("\nFor n = 5 we observe such results:\n")
+
+n <- 5
+sample_means <- colMeans(matrix(rpois(n*K, lambda = mu_single), nrow=n))
+sigma <- sqrt(mu / n)
+Fs <- ecdf(sample_means)
+
+xlims <- c(mu - 3*sigma, mu + 3*sigma)
+
+x_points_seq <- seq(xlims[1], xlims[2], length.out = 5)
+
+ecdf_v <- Fs(x_points_seq) # Calculating ecdf in particular points
+
+cdf_v <- pnorm(x_points_seq, mean = mu, sd = sigma)
+
+diff1 <- max(abs(ecdf_v - cdf_v))
+
+cat("max difference in value between ecdf and cdf is:", diff1, "\n")
+
+cat("\nFor n = 10 we observe such results:\n")
+
+n <- 10
+sample_means <- colMeans(matrix(rpois(n*K, lambda = mu_single), nrow=n))
+sigma <- sqrt(mu / n)
+Fs <- ecdf(sample_means)
+
+xlims <- c(mu - 3*sigma, mu + 3*sigma)
+
+# Taking values from the segment with the length of 10
+x_points_seq <- seq(xlims[1], xlims[2], length.out = 10)
+
+ecdf_v <- Fs(x_points_seq) # Calculating ecdf in particular points
+
+cdf_v <- pnorm(x_points_seq, mean = mu, sd = sigma)
+
+diff2 <- max(abs(ecdf_v - cdf_v))
+
+cat("max difference in value between ecdf and cdf is:", diff2, "\n")
+
+cat("\nFor n = 50 we observe such results:\n")
+
+n <- 50
+sample_means <- colMeans(matrix(rpois(n*K, lambda = mu_single), nrow=n))
+sigma <- sqrt(mu / n)
+Fs <- ecdf(sample_means)
+
+xlims <- c(mu - 3*sigma, mu + 3*sigma)
+
+# Taking values from the segment with the length of 50
+x_points_seq <- seq(xlims[1], xlims[2], length.out = 50)
+
+ecdf_v <- Fs(x_points_seq) # Calculating ecdf in particular points
+
+cdf_v <- pnorm(x_points_seq, mean = mu, sd = sigma)
+
+diff3 <- max(abs(ecdf_v - cdf_v))
+
+cat("  max difference in value between ecdf and cdf is:", diff3, "\n")
+cat("\n Conclusion:\n")
+cat("\n As we can see from the observations for n = 5, 10, 50 the max difference between ecdf and cdf is:", "\n", diff1, "\n", diff2, "\n", diff3, "\n")
+cat("\n From these calculations we can derive a conclusion that with increased number of samples ecdf tends to have \n closer values to theoretical cdf. Thus supporting the CLT. \n")
+
+```
 
 ```{r}
-xlims <- c(mu-3*sigma,mu+3*sigma)
-Fs <- ecdf(sample_means)
-plot(Fs, 
-     xlim = xlims, 
-     ylim = c(0,1),
-     col = "blue",
-     lwd = 2,
-     main = "Comparison of ecdf and cdf")
-curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
+cat("\n ======================================== \n")
+cat("\n ===============SUBTASK 3================\n")
+cat("\n ======================================== \n")
+
+n_critical <- 8e8
+p_target <- 0.95
+
+cat("\nWe need to find the largest n such that P(Y < n_critical) >= p_target\n")
+cat("where Y is the sum of n i.i.d. Poisson random variables Xi\n\n")
+
+cat("Markov Inequality\n\n")
+
+# Markov inequality: P(X >= a) <= E(X)/a
+# P(Y < n_critical) >= 1 - E(Y)/n_critical
+# where Y is num of total decays
+# 1 - E(Y)/n_critical >= p_target
+# E(Y) <= n_critical * (1 - p_target)
+
+# E(Xn) = mu_single
+# E(X1 + X2 + ... Xn) = n * mu_single
+# n * mu_single <= n_critical * (1 - p_target)
+# n <= n_critical * (1 - p_target) / mu_single
+
+# using floor to derive whole number of n r.v's
+n_markov <- floor(n_critical * (1 - p_target) / mu_single)
+
+cat("  Solving for n:\n")
+cat("    n <= n_critical * (1 - p_target) / mu_single\n")
+cat("    n <=", n_critical, "*", (1 - p_target), "/", mu_single, "\n")
+cat("    n <=", n_critical * (1 - p_target) / mu_single, "\n\n")
+cat("  Maximum n: ", n_markov, "\n\n")
+
+cat("Central Limit Theorem\n")
+
+# According to the CLT, for large enough n, the S = (X1 + X2 + ... + Xn) ~ N(n*mu_single, n*mu_single) 
+
+# For Poisson distribution we have that mu = sigma2 (Mean equals Variance)
+
+# We need to convert our r.v S to ~N(0,1) 
+# P(S < n_critical) >= p_target
+# Since X~Poiss(lambda), E(X)=Var(X)=mu_single
+# Z = (S - n × mu_single) / sqrt(n × mu_single) ~ N(0,1)
+# We can rewrite: P((S - n*mu_single)/sqrt(n*mu_single) < (n_critical - n*mu_single)/sqrt(n*mu_single)) >= p_target
+# 
+# P((S - n × mu_single)/sqrt(n × mu_single) < (n_critical - n × mu_single)/sqrt(n × mu_single)) ≥ 0.95
+# P(Z < (n_critical - n × mu_single)/sqrt(n × mu_single)) ≥ 0.95
+# (n_critical - n × mu_single) / sqrt(n × mu_single) ≥ qnorm(0.95)
+
+# Calculate the quantile of standard normal distribution corresponding to p_target
+z_p_target <- qnorm(p_target)
+
+# n_critical - n*mu_single >= z * sqrt(n*mu_single)
+# n_critical >= n*mu_single + z * sqrt(n*mu_single)
+#
+# Let y = sqrt(n*mu_single), then n = y^2/mu_single
+# n_critical >= y^2 + z*y
+# y^2 + z*y - n_critical <= 0
+
+y_root <- (-z_p_target + sqrt(z_p_target^2 + 4*n_critical)) / 2
+n_clt <- floor(y_root^2 / mu_single)
+
+cat("  y =", y_root, "\n")
+cat("  n =", y_root^2 / mu_single, "\n\n")
+cat("  Maximum n (CLT): ", n_clt, "\n\n")
+
+cat("=== RESULTS ===\n\n")
+cat("Maximum n using Markov inequality: ", n_markov, "\n")
+cat("Maximum n using CLT:               ", n_clt, "\n")
+
+cat("CONCLUSION:\n")
+cat("The CLT provides a much more precise bounds than Markov inequality.\n")
+cat("  Markov inequality only uses the mean to derive bounds, whereas CLT uses both mean and variance\n")
+cat("  CLT assumes approximate normality for large n\n")
+cat("  From obrained results we can clearly see that CLT gave us a much more 'optimistic' results rather than Markov inequality\n")
+cat("  Results vary greatly: According to CLT we get n = 9, and according to Markov's n = 0\n")
 ```
-
-**Next, proceed with all the remaining steps**
-
-**Do not forget to include several sentences summarizing your work and the conclusions you have made!**
 
 ------------------------------------------------------------------------
 
