@@ -323,23 +323,130 @@ curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
 
 1.  **In this part, we discuss independence of random variables and its moments: expectation and variance.**
 
-    1.  Suppose we have a random variable $X$. Explain why $\mathbb{E}(\frac{1}{X}) \neq \frac{1}{\mathbb{E(X)}}$;
+  1.Suppose we have a random variable $X$. Explain why $\mathbb{E}(\frac{1}{X}) \neq \frac{1}{\mathbb{E(X)}}$;
+    
+The core idea is that the Expectation (or average) is a linear operation.
+This means it only works like $E(aX + b) = aE(X) + b$.
+The function $g(X) = 1/X$ is not linear. It is a curved line and we cannot simply swap the $E$ and the $1/X$ operation.
 
-    2.  Let $X \sim \mathscr{N}(\mu,\sigma^2)$ with $\mu = teamidnumber$ and $\sigma^{2} = 2\times teamidnumber+7$. Simulate realizations $x_1,x_2,\dots,x_{100}$ of $X$ and $y_1,y_2,\dots,y_{100}$ of $Y := \frac{1}{X}$ to calculate the values of $\frac{1}{\overline{\textbf{X}}}$ and $\overline{\textbf{Y}}$. Comment on the received results;
+Here are two ways to prove this.
 
-        ```{r}
-        mu <- 0 #change this!
-        sigma <- 1 #change this
-        N <- 100
+1. Proof by Counterexample
 
-        # YOUR CODE HERE
-        ```
+Random variable $X$.
+
+$P(X=1) = 0.5$
+
+$P(X=10) = 0.5$
+
+Now, let's calculate $E\left[\frac{1}{X}\right]$ and $\frac{1}{E[X]}$ separately.
+
+$E[X] = (1 \times 0.5) + (10 \times 0.5) = 0.5 + 5 = 5.5$
+
+Now, we find the reciprocal (1 divided by that number):
+
+$1/E[X] = 1/5.5 = 0.1818$
+
+Calculate $E\left[\frac{1}{X}\right]$
+
+First, we find the values of $1/X$:
+
+If $X = 1$, then $1/X = 1/1 = 1$. (This has $P=0.5$)
+
+If $X = 10$, then $1/X = 1/10 = 0.1$. (This has $P=0.5$)
+
+Now, we find the average (expectation) 
+$E[1/X] = (1 \times 0.5) + (0.1 \times 0.5) = 0.5 + 0.05 = \mathbf{0.55}$
+
+As you can see, $\mathbf{0.55 \neq 0.1818}$. 
+
+We have proved that $E\left[\frac{1}{X}\right] \neq \frac{1}{E[X]}$.
+
+2. The Formal Proof (Jensen's Inequality)
+
+This is the more advanced mathematical reason. It explains why they are not equal.
+
+The function we are applying is $g(X) = 1/X$. This function is convex for $X > 0$. 
+
+There is a special rule in probability called Jensen's Inequality. It states that for any convex function $g(X)$:
+
+$E[g(X)] \ge g(E[X])$
+
+(The average of the function's output is greater than or equal to the function of the average input.)
+
+Our convex function is $g(X) = 1/X$. Let's substitute it into the inequality:
+$E[\frac{1}{X}] \ge \frac{1}{E[X]}$
+
+This is the proof. The formal rule is not an equality, it is an inequality ($\ge$). This shows that the two sides are not the same.
+
+
+
+2.  Let $X \sim \mathscr{N}(\mu,\sigma^2)$ with $\mu = teamidnumber$ and $\sigma^{2} = 2\times teamidnumber+7$. Simulate realizations $x_1,x_2,\dots,x_{100}$ of $X$ and $y_1,y_2,\dots,y_{100}$ of $Y := \frac{1}{X}$ to calculate the values of $\frac{1}{\overline{\textbf{X}}}$ and $\overline{\textbf{Y}}$. Comment on the received results;
+
+```{r}
+mu <- 26
+sigma <- sqrt(59)
+N <- 100
+
+X <- rnorm(N, mu, sigma)
+Y <- 1/X
+
+mean_x <- mean(X)
+mean_Y <- mean(Y)
+
+reciprocal_mean_X <- 1/mean_x
+
+reciprocal_mean_X
+mean_Y
+```
+These values are not equal.
+The mean_Y $E[1/X]$ and the reciprocal_mean_X $1/E[X]$ are different.
+This result from our simulation supports the theoretical idea from Task 1, which we proved using Jensen's Inequality.
 
     3.  Let $X$ and $Y$ be exponentially distributed r.v.'s with parameter $\lambda = 2$. Set $Z := \log{X} + 5$. Plot the Quantile-Quantile plot and scatterplot of $X$ and $Y$. Plot the Quantile-Quantile plot and scatterplot of $X$ and $Z$. Explain the results. Comment on the difference of relations between the pairs of random variables. Which pair of r.v.'s is dependent and which one is similar?
 
-        ```{r}
-        # YOUR CODE HERE
-        ```
+```{r}
+lambda <- 2
+
+X_exp <- rexp(n = N, lambda)
+Y_exp <- rexp(n = N, lambda)
+Z_exp <- log(X_exp) + 5
+
+qqplot(X_exp, Y_exp, 
+       main = "Q-Q Plot: X vs Y", 
+       xlab = "X", ylab = "Y")
+# Adding line for x=y because distributions are the same.
+qqline(Y_exp, col = "red") 
+# The points lie on the line, so X and Y are "similar" (from the same distribution).
+
+plot(X_exp, Y_exp, 
+     main = "Scatterplot: X vs Y",
+     xlab = "X", ylab = "Y")
+# Here we can see chaotic number of points. We don't have any pattern here so X and Y are independent.
+
+qqplot(X_exp, Z_exp, 
+       main = "Q-Q Plot: X vs Z",
+       xlab = "X", ylab = "Z")
+# Adding line for y=x.
+qqline(Z_exp, col = "blue")
+# The points form a curve and do not lie on the line. Therefore, X and Z are NOT "similar" (they are from different distributions).
+
+plot(X_exp, Z_exp, 
+     main = "Scatterplot: X vs Z",
+     xlab = "X", ylab = "Z")
+# Here we can see a clear logarithmic curve. All points lie on it. This proves that Z is functionally dependent on X.
+```
+
+The (X, Y) pair is similar. 
+"Similar" means they come from the same statistical distribution. 
+We created both $X$ and $Y$ and they follow the exact same $Exp(2)$ distribution. 
+Our Q-Q plot confirms this, as the points form a straight $y=x$ line.
+
+The (X, Z) pair is dependent. "Dependent" means the value of one variable gives you information about the other.
+We created $Z$ from $X$ using the formula $Z = \log(X) + 5$. 
+Because $Z$ is calculated directly from $X$, they are functionally dependent. 
+Our scatterplot confirms this, showing all points perfectly aligned on a logarithmic curve.
+
 
     ------------------------------------------------------------------------
 
