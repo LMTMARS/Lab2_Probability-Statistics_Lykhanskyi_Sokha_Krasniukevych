@@ -548,13 +548,12 @@ Based on the simulation results, we can conclude that the distribution of the sa
 nu <- N * nu1
 p_safe <- 0.95                      
 clicks <- 100              
-k_clicks <- C_max + 1
+k_clicks <- clicks + 1
 T_safe <- 1
 
 nu_markov_max <- (1 - p_safe) * k_clicks / T_safe
 N_markov <- nu_markov_max / nu1
 cat("Markov bound on N:", N_markov, "\n")
-
 
 z_0_05 <- qnorm(1 - p_safe) 
 nu_clt_max <- k_clicks + z_0_05 * sqrt(k_clicks)
@@ -586,11 +585,11 @@ simulate_S <- function(N, K) {
 }
 
 res_markov <- simulate_S(N_markov, K)
-res_clt <- simulate_S(N_clt_bound, K)
+res_clt <- simulate_S(N_clt, K)
 res_chernoff <- simulate_S(N_chernoff, K)
 
 cat("Markov      ", N_markov, "  ", res_markov$p_safe_empirical, "\n")
-cat("CLT         ", N_clt_bound, "   ", res_clt$p_safe_empirical, "\n")
+cat("CLT         ", N_clt, "   ", res_clt$p_safe_empirical, "\n")
 cat("Chernoff    ", N_chernoff, "   ", res_chernoff$p_safe_empirical, "\n")
 ```
 
