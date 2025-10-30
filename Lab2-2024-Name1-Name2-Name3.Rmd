@@ -378,17 +378,19 @@ cat("  Results vary greatly: According to CLT we get n = 9, and according to Mar
 #### First, generate samples an sample means:
 
 ```{r}
-nu1 <- 1  # change this!
+id <- 26
+nu1 <- id + 10
 K <- 1e3
 n <- 5
 sample_means <- colMeans(matrix(rexp(n*K, rate = nu1), nrow=n))
+sample_means
 ```
 
 #### Next, calculate the parameters of the standard normal approximation
 
 ```{r}
-mu <- 0       # change this!
-sigma <- 1    # change this!
+mu <- 1/nu1   
+sigma <- 1/(nu1*sqrt(n))
 ```
 
 #### We can now plot ecdf and cdf
@@ -404,11 +406,106 @@ plot(Fs,
 curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
 ```
 
-**Next, proceed with all the remaining steps**
+#### The maximal difference between the two c.d.f.’s;
 
-**Do not forget to include several sentences summarizing your work and the conclusions you have made!**
+```{r}
+max_diff <- max(abs(Fs(sample_means)-pnorm(sample_means, mean = mu, sd = sigma)))
+max_diff
+```
 
-------------------------------------------------------------------------
+```{r}
+n_values <- c(10, 50)  
+max_differences <- numeric(length(n_values)) 
+
+par(mfrow=c(1, length(n_values)))  
+
+for (i in seq_along(n_values)) {
+  n <- n_values[i]
+  
+  sample_means <- colMeans(matrix(rexp(n*K, rate = nu1), nrow=n))
+  
+  mu <- 1/nu1
+  sigma <- 1/(nu1*sqrt(n))
+  
+  Fs <- ecdf(sample_means)
+  
+  x_vals <- sort(sample_means)
+  
+  max_differences[i] <- max(abs(Fs(x_vals) - pnorm(x_vals, mean = mu, sd = sigma)))
+  
+  xlims <- c(mu-3*sigma, mu+3*sigma)
+  plot(Fs, 
+     xlim = xlims, 
+     col = "blue",
+     lwd = 2,
+     main = "Comparison of ecdf and cdf")
+  curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
+}
+max_differences
+```
+
+Based on the simulation results, we can conclude that the distribution of the sample mean of exponential random variables becomes increasingly close to the normal distribution as the sample size grows, which confirms the Central Limit Theorem (CLT). For larger samples (n = 50), the empirical distribution of the sample means is almost indistinguishable from the corresponding normal distribution with mean μ = 1/ν and variance σ² = 1/(nν²). The maximal difference between the empirical cumulative distribution function (ECDF) and the theoretical normal CDF decreases as n increases.
+
+#### Let's obtain the theoretical bounds on N using the Markov inequality, Chernoff bound and Central Limit Theorem
+
+```{r}
+nu <- N * nu1
+p_safe <- 0.95                      
+clicks <- 100              
+k_clicks <- C_max + 1
+T_safe <- 1
+
+nu_markov_max <- (1 - p_safe) * k_clicks / T_safe
+N_markov <- nu_markov_max / nu1
+cat("Markov bound on N:", N_markov, "\n")
+
+
+z_0_05 <- qnorm(1 - p_safe) 
+nu_clt_max <- k_clicks + z_0_05 * sqrt(k_clicks)
+N_clt <- nu_clt_max / nu1
+cat("CLT bound on N:", N_clt, "\n")
+
+chernoff_log_equation <- function(nu_val) {
+  k_clicks * log(nu_val / k_clicks) + k_clicks - nu_val - log(1 - p_safe)
+}
+
+nu_chernoff_max <- tryCatch({
+  uniroot(chernoff_log_equation, interval = c(k_clicks * 0.7, k_clicks * 1.3))$root
+}, error = function(e) {
+  k_clicks - sqrt(2 * k_clicks * abs(log(1 - p_safe)))
+})
+
+N_chernoff <- nu_chernoff_max / nu1
+cat("Chernoff bound on N:", N_chernoff, "\n")
+```
+
+```{r}
+simulate_S <- function(N, K) {
+  nu <- N * nu1
+  
+  s <- replicate(K, sum(rexp(k_clicks, rate = nu)))
+  
+  p_empirical <- mean(s >= T_safe)
+  return(list(sums = s, p_safe_empirical = p_empirical))
+}
+
+res_markov <- simulate_S(N_markov, K)
+res_clt <- simulate_S(N_clt_bound, K)
+res_chernoff <- simulate_S(N_chernoff, K)
+
+cat("Markov      ", N_markov, "  ", res_markov$p_safe_empirical, "\n")
+cat("CLT         ", N_clt_bound, "   ", res_clt$p_safe_empirical, "\n")
+cat("Chernoff    ", N_chernoff, "   ", res_chernoff$p_safe_empirical, "\n")
+```
+
+The results show that the three bounds — Markov, CLT, and Chernoff — give quite different estimates for the maximal number of radioactive samples N that can be safely stored.
+
+The Markov inequality only uses the expected value of the total time between clicks and ignores any information about the variance or shape of the distribution. Because of this, it provides only a very loose upper bound, ensuring safety with almost absolute certainty (probability ≈ 1).
+
+The CLT bound (N ≈ 2.35) uses the Central Limit Theorem approximation, which takes into account both the mean and variance of the total time between clicks. This provides a much more realistic estimate, corresponding to a safety probability close to the desired 0.95. It reflects the fact that as the number of clicks increases, the sum of exponential random variables behaves approximately normally, giving a tighter and more accurate bound.
+
+The Chernoff bound (N ≈ 2.12) is derived from the exponential inequality. It is slightly smaller than the CLT value but still much tighter than the Markov bound. The resulting probability (≈ 0.996) indicates stronger assurance of safety.
+
 
 ### Task 4.
 
