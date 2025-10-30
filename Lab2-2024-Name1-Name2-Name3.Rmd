@@ -742,26 +742,47 @@ Our scatterplot confirms this, showing all points perfectly aligned on a logarit
 
     1.  Explain what type of random variable is X:
 
-        -   Normally distributed
-
-        -   Binomially distributed
-
-        -   Poisson distributed
-
-        -   Uniformly distributed
+        X - is the number of Heads in three tosses, in other words it is the number of successes, so X∼Binomial(n=3,p=0.5)
 
     2.  What are the expected value and variance of X? Simulate realizations $x_1,x_2,\dots,x_{100}$ of $X$ to calculate the values of sample mean $\overline{\mathbf{X}}$ and sample variance $s^2 = \frac{\sum_{i=1}^{n}{(x_i - \overline{x})^{2}}}{n-1}$. Comment on the results;
 
-        ```{r}
-        # YOUR CODE HERE
-        ```
+```{r}
+theoretical_mean_X <- 1.5        #E[X]=np=3*0.5
+theoretical_var_X <- 0.75        #Var(X)=np(1−p)=3*0.5*0.5 
 
-    3.  What are the expected value and variance of Y? Simulate realizations $y_1,y_2,\dots,y_{100}$ of $Y$ to calculate the values of sample mean $\overline{\mathbf{Y}}$ and sample variance $s^2 = \frac{\sum_{i=1}^{n}{(y_i - \overline{y})^{2}}}{n-1}$. Comment on the results;
+n <- 100
+sample_X <- rbinom(n, 3, 0.5)
 
-        ```{r}
-        # YOUR CODE HERE
-        ```
+sample_mean_X <- mean(sample_X)
+sample_var_X <- var(sample_X)
 
+results <- data.frame(means = c(theoretical_mean_X, sample_mean_X),
+                      variances = c(theoretical_var_X, sample_var_X))
+
+results
+
+```
+  The sample mean and sample variance computed from 100 simulated values is close to the theoretical E[X]=1.5 and Var(X)=0.75. As the number of simulations increases, the sample mean will converge to the theoretical mean (Law of Large Numbers).
+
+3.  What are the expected value and variance of Y? Simulate realizations $y_1,y_2,\dots,y_{100}$ of $Y$ to calculate the values of sample mean $\overline{\mathbf{Y}}$ and sample variance $s^2 = \frac{\sum_{i=1}^{n}{(y_i - \overline{y})^{2}}}{n-1}$. Comment on the results;
+
+```{r}
+sample_Y <- 0.5 * sample_X - 1
+
+theoretical_mean_Y <- 0.5*theoretical_mean_X - 1
+theoretical_var_Y  <- 0.5^2*theoretical_var_X
+
+sample_mean_Y <- mean(sample_Y)
+sample_var_Y <- var(sample_Y)
+
+results <- data.frame(means = c(theoretical_mean_Y, sample_mean_Y),
+                      variances = c(theoretical_var_Y, sample_var_Y))
+
+results
+
+```
+  The simulated sample mean and variance of Y are close to the theoretical values  E[Y]=-0.25 and Var(Y)=0.1875. As the number of simulations increases, the sample statistics will converge to the theoretical ones according to the Law of Large Numbers.
+  
 **Do not forget to include several sentences summarizing your work and the conclusions you have made!**
 
 ------------------------------------------------------------------------
