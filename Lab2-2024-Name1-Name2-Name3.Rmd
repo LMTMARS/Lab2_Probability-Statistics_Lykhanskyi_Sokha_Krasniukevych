@@ -369,7 +369,8 @@ results <- data.frame(means = c(theoretical_mean_X, sample_mean_X),
 results
 
 ```
-  The sample mean and sample variance computed from 100 simulated values is close to the theoretical E[X]=1.5 and Var(X)=0.75. As the number of simulations increases, the sample mean will converge to the theoretical mean (Law of Large Numbers).
+
+The sample mean and sample variance computed from 100 simulated values is close to the theoretical E[X]=1.5 and Var(X)=0.75. As the number of simulations increases, the sample mean will converge to the theoretical mean (Law of Large Numbers).
 
 3.  What are the expected value and variance of Y? Simulate realizations $y_1,y_2,\dots,y_{100}$ of $Y$ to calculate the values of sample mean $\overline{\mathbf{Y}}$ and sample variance $s^2 = \frac{\sum_{i=1}^{n}{(y_i - \overline{y})^{2}}}{n-1}$. Comment on the results;
 
@@ -388,8 +389,9 @@ results <- data.frame(means = c(theoretical_mean_Y, sample_mean_Y),
 results
 
 ```
-  The simulated sample mean and variance of Y are close to the theoretical values  E[Y]=-0.25 and Var(Y)=0.1875. As the number of simulations increases, the sample statistics will converge to the theoretical ones according to the Law of Large Numbers.
-  
+
+The simulated sample mean and variance of Y are close to the theoretical values E[Y]=-0.25 and Var(Y)=0.1875. As the number of simulations increases, the sample statistics will converge to the theoretical ones according to the Law of Large Numbers.
+
 **Do not forget to include several sentences summarizing your work and the conclusions you have made!**
 
 ------------------------------------------------------------------------
